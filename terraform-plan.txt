@@ -1,0 +1,1527 @@
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+Terraform will perform the following actions:
+
+  # data.aws_eks_cluster.cluster will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_eks_cluster" "cluster" {
+      + arn                       = (known after apply)
+      + certificate_authority     = (known after apply)
+      + cluster_id                = (known after apply)
+      + created_at                = (known after apply)
+      + enabled_cluster_log_types = (known after apply)
+      + endpoint                  = (known after apply)
+      + id                        = (known after apply)
+      + identity                  = (known after apply)
+      + kubernetes_network_config = (known after apply)
+      + name                      = (known after apply)
+      + outpost_config            = (known after apply)
+      + platform_version          = (known after apply)
+      + role_arn                  = (known after apply)
+      + status                    = (known after apply)
+      + tags                      = (known after apply)
+      + version                   = (known after apply)
+      + vpc_config                = (known after apply)
+    }
+
+  # data.aws_eks_cluster_auth.cluster will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_eks_cluster_auth" "cluster" {
+      + id    = (known after apply)
+      + name  = (known after apply)
+      + token = (sensitive value)
+    }
+
+  # aws_athena_workgroup.superset will be created
+  + resource "aws_athena_workgroup" "superset" {
+      + arn           = (known after apply)
+      + force_destroy = false
+      + id            = (known after apply)
+      + name          = "superset"
+      + state         = "ENABLED"
+      + tags_all      = (known after apply)
+
+      + configuration {
+          + enforce_workgroup_configuration    = true
+          + publish_cloudwatch_metrics_enabled = true
+          + requester_pays_enabled             = false
+
+          + result_configuration {
+              + output_location = "s3://lottery-data-bucket/query-result/"
+
+              + encryption_configuration {
+                  + encryption_option = "SSE_KMS"
+                  + kms_key_arn       = (known after apply)
+                }
+            }
+        }
+    }
+
+  # aws_glue_catalog_database.s3 will be created
+  + resource "aws_glue_catalog_database" "s3" {
+      + arn          = (known after apply)
+      + catalog_id   = (known after apply)
+      + id           = (known after apply)
+      + location_uri = (known after apply)
+      + name         = "lottery_db"
+      + tags_all     = (known after apply)
+    }
+
+  # aws_glue_catalog_table.lottery will be created
+  + resource "aws_glue_catalog_table" "lottery" {
+      + arn           = (known after apply)
+      + catalog_id    = (known after apply)
+      + database_name = "lottery_db"
+      + id            = (known after apply)
+      + name          = "draw_details"
+      + parameters    = {
+          + "EXTERNAL"               = "TRUE"
+          + "classification"         = "csv"
+          + "skip.header.line.count" = "1"
+        }
+      + table_type    = "EXTERNAL_TABLE"
+
+      + storage_descriptor {
+          + input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+          + location      = "s3://lottery-data-bucket/datasets"
+          + output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+          + columns {
+              + name = "draw_date"
+              + type = "string"
+            }
+          + columns {
+              + name = "winning_numbers"
+              + type = "string"
+            }
+          + columns {
+              + name = "mega_ball"
+              + type = "int"
+            }
+          + columns {
+              + name = "multiplier"
+              + type = "int"
+            }
+
+          + ser_de_info {
+              + parameters            = {
+                  + "field.delim"          = ","
+                  + "serialization.format" = "1"
+                }
+              + serialization_library = "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"
+            }
+        }
+    }
+
+  # aws_iam_access_key.superset will be created
+  + resource "aws_iam_access_key" "superset" {
+      + create_date                    = (known after apply)
+      + encrypted_secret               = (known after apply)
+      + encrypted_ses_smtp_password_v4 = (known after apply)
+      + id                             = (known after apply)
+      + key_fingerprint                = (known after apply)
+      + secret                         = (sensitive value)
+      + ses_smtp_password_v4           = (sensitive value)
+      + status                         = "Active"
+      + user                           = "superset_user"
+    }
+
+  # aws_iam_policy.athena_policy will be created
+  + resource "aws_iam_policy" "athena_policy" {
+      + arn         = (known after apply)
+      + description = "Policy for full Athena access to a specified workgroup"
+      + id          = (known after apply)
+      + name        = "athena_policy"
+      + name_prefix = (known after apply)
+      + path        = "/"
+      + policy      = (known after apply)
+      + policy_id   = (known after apply)
+      + tags_all    = (known after apply)
+    }
+
+  # aws_iam_policy.s3_policy will be created
+  + resource "aws_iam_policy" "s3_policy" {
+      + arn         = (known after apply)
+      + description = "Policy for Athena/Superset to query S3 bucket"
+      + id          = (known after apply)
+      + name        = "athena_s3_policy"
+      + name_prefix = (known after apply)
+      + path        = "/"
+      + policy      = (known after apply)
+      + policy_id   = (known after apply)
+      + tags_all    = (known after apply)
+    }
+
+  # aws_iam_role.superset will be created
+  + resource "aws_iam_role" "superset" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = (known after apply)
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "superset_role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = (known after apply)
+      + unique_id             = (known after apply)
+    }
+
+  # aws_iam_role_policy_attachment.superset_athena_policy_attachment will be created
+  + resource "aws_iam_role_policy_attachment" "superset_athena_policy_attachment" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "superset_role"
+    }
+
+  # aws_iam_role_policy_attachment.superset_s3_policy_attachment will be created
+  + resource "aws_iam_role_policy_attachment" "superset_s3_policy_attachment" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = "superset_role"
+    }
+
+  # aws_iam_user.superset will be created
+  + resource "aws_iam_user" "superset" {
+      + arn           = (known after apply)
+      + force_destroy = false
+      + id            = (known after apply)
+      + name          = "superset_user"
+      + path          = "/"
+      + tags_all      = (known after apply)
+      + unique_id     = (known after apply)
+    }
+
+  # aws_kms_key.key will be created
+  + resource "aws_kms_key" "key" {
+      + arn                                = (known after apply)
+      + bypass_policy_lockout_safety_check = false
+      + customer_master_key_spec           = "SYMMETRIC_DEFAULT"
+      + deletion_window_in_days            = 10
+      + description                        = "This key is used to encrypt bucket objects in the bucket lottery-data-bucket"
+      + enable_key_rotation                = false
+      + id                                 = (known after apply)
+      + is_enabled                         = true
+      + key_id                             = (known after apply)
+      + key_usage                          = "ENCRYPT_DECRYPT"
+      + multi_region                       = (known after apply)
+      + policy                             = (known after apply)
+      + tags_all                           = (known after apply)
+    }
+
+  # aws_s3_bucket.lottery will be created
+  + resource "aws_s3_bucket" "lottery" {
+      + acceleration_status         = (known after apply)
+      + acl                         = (known after apply)
+      + arn                         = (known after apply)
+      + bucket                      = "lottery-data-bucket"
+      + bucket_domain_name          = (known after apply)
+      + bucket_prefix               = (known after apply)
+      + bucket_regional_domain_name = (known after apply)
+      + force_destroy               = false
+      + hosted_zone_id              = (known after apply)
+      + id                          = (known after apply)
+      + object_lock_enabled         = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = (known after apply)
+      + request_payer               = (known after apply)
+      + tags                        = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all                    = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + website_domain              = (known after apply)
+      + website_endpoint            = (known after apply)
+    }
+
+  # aws_s3_bucket_server_side_encryption_configuration.kms will be created
+  + resource "aws_s3_bucket_server_side_encryption_configuration" "kms" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+
+      + rule {
+          + apply_server_side_encryption_by_default {
+              + kms_master_key_id = (known after apply)
+              + sse_algorithm     = "aws:kms"
+            }
+        }
+    }
+
+  # aws_s3_object.query_result will be created
+  + resource "aws_s3_object" "query_result" {
+      + acl                    = (known after apply)
+      + bucket                 = "lottery-data-bucket"
+      + bucket_key_enabled     = (known after apply)
+      + checksum_crc32         = (known after apply)
+      + checksum_crc32c        = (known after apply)
+      + checksum_sha1          = (known after apply)
+      + checksum_sha256        = (known after apply)
+      + content_type           = (known after apply)
+      + etag                   = (known after apply)
+      + force_destroy          = false
+      + id                     = (known after apply)
+      + key                    = "query-result/"
+      + kms_key_id             = (known after apply)
+      + server_side_encryption = (known after apply)
+      + source                 = "/dev/null"
+      + storage_class          = (known after apply)
+      + tags_all               = (known after apply)
+      + version_id             = (known after apply)
+    }
+
+  # aws_s3_object.winning_numbers will be created
+  + resource "aws_s3_object" "winning_numbers" {
+      + acl                    = (known after apply)
+      + bucket                 = "lottery-data-bucket"
+      + bucket_key_enabled     = (known after apply)
+      + checksum_crc32         = (known after apply)
+      + checksum_crc32c        = (known after apply)
+      + checksum_sha1          = (known after apply)
+      + checksum_sha256        = (known after apply)
+      + content_base64         = (sensitive value)
+      + content_type           = "text/csv; charset=utf-8"
+      + etag                   = (known after apply)
+      + force_destroy          = false
+      + id                     = (known after apply)
+      + key                    = "datasets/Lottery_Mega_Millions_Winning_Numbers__Beginning_2002.csv"
+      + kms_key_id             = (known after apply)
+      + server_side_encryption = (known after apply)
+      + storage_class          = (known after apply)
+      + tags_all               = (known after apply)
+      + version_id             = (known after apply)
+    }
+
+  # helm_release.superset will be created
+  + resource "helm_release" "superset" {
+      + atomic                     = false
+      + chart                      = "superset"
+      + cleanup_on_fail            = false
+      + create_namespace           = true
+      + dependency_update          = false
+      + disable_crd_hooks          = false
+      + disable_openapi_validation = false
+      + disable_webhooks           = false
+      + force_update               = false
+      + id                         = (known after apply)
+      + lint                       = false
+      + manifest                   = (known after apply)
+      + max_history                = 0
+      + metadata                   = (known after apply)
+      + name                       = "superset"
+      + namespace                  = "superset"
+      + pass_credentials           = false
+      + recreate_pods              = false
+      + render_subchart_notes      = true
+      + replace                    = false
+      + repository                 = "https://apache.github.io/superset"
+      + reset_values               = false
+      + reuse_values               = false
+      + skip_crds                  = false
+      + status                     = "deployed"
+      + timeout                    = 300
+      + values                     = [
+          + <<-EOT
+                ---
+                # The bootstrap script installs pyathena and PyAthenaJDBC, required to enable Athena as a database in Superset.
+                bootstrapScript: |
+                  #!/bin/bash
+                  pip install pyathena[pandas] \
+                    pip install PyAthenaJDBC &&\
+                  if [ ! -f ~/bootstrap ]; then echo "Running Superset with uid {{ .Values.runAsUser }}" > ~/bootstrap; fi
+                
+                
+                service:
+                  type: LoadBalancer  # NOT recommended in a production environment; service should be backed by an ingress resource for external access
+                  port: 80 # NOT recommended in a production environment; should use HTTPS/port 443
+                  nodePort:
+                    http: 30010
+                
+                extraEnv: 
+                  TALISMAN_ENABLED: False
+                  WTF_CSRF_ENABLED: False
+            EOT,
+        ]
+      + verify                     = false
+      + version                    = "0.10.7"
+      + wait                       = true
+      + wait_for_jobs              = false
+    }
+
+  # random_string.suffix will be created
+  + resource "random_string" "suffix" {
+      + id          = (known after apply)
+      + length      = 8
+      + lower       = true
+      + min_lower   = 0
+      + min_numeric = 0
+      + min_special = 0
+      + min_upper   = 0
+      + number      = true
+      + numeric     = true
+      + result      = (known after apply)
+      + special     = false
+      + upper       = true
+    }
+
+  # module.eks.data.aws_eks_addon_version.this["aws-ebs-csi-driver"] will be read during apply
+  # (depends on a resource or a module with changes pending)
+ <= data "aws_eks_addon_version" "this" {
+      + addon_name         = "aws-ebs-csi-driver"
+      + id                 = (known after apply)
+      + kubernetes_version = "1.27"
+      + most_recent        = true
+      + version            = (known after apply)
+    }
+
+  # module.eks.data.tls_certificate.this[0] will be read during apply
+  # (config refers to values not yet known)
+ <= data "tls_certificate" "this" {
+      + certificates = (known after apply)
+      + id           = (known after apply)
+      + url          = (known after apply)
+    }
+
+  # module.eks.aws_cloudwatch_log_group.this[0] will be created
+  + resource "aws_cloudwatch_log_group" "this" {
+      + arn               = (known after apply)
+      + id                = (known after apply)
+      + name              = (known after apply)
+      + name_prefix       = (known after apply)
+      + retention_in_days = 90
+      + skip_destroy      = false
+      + tags              = (known after apply)
+      + tags_all          = (known after apply)
+    }
+
+  # module.eks.aws_ec2_tag.cluster_primary_security_group["environment"] will be created
+  + resource "aws_ec2_tag" "cluster_primary_security_group" {
+      + id          = (known after apply)
+      + key         = "environment"
+      + resource_id = (known after apply)
+      + value       = "dev"
+    }
+
+  # module.eks.aws_ec2_tag.cluster_primary_security_group["purpose"] will be created
+  + resource "aws_ec2_tag" "cluster_primary_security_group" {
+      + id          = (known after apply)
+      + key         = "purpose"
+      + resource_id = (known after apply)
+      + value       = "challenge"
+    }
+
+  # module.eks.aws_eks_addon.this["aws-ebs-csi-driver"] will be created
+  + resource "aws_eks_addon" "this" {
+      + addon_name           = "aws-ebs-csi-driver"
+      + addon_version        = (known after apply)
+      + arn                  = (known after apply)
+      + cluster_name         = (known after apply)
+      + configuration_values = (known after apply)
+      + created_at           = (known after apply)
+      + id                   = (known after apply)
+      + modified_at          = (known after apply)
+      + resolve_conflicts    = "OVERWRITE"
+      + tags                 = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all             = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+
+      + timeouts {}
+    }
+
+  # module.eks.aws_eks_cluster.this[0] will be created
+  + resource "aws_eks_cluster" "this" {
+      + arn                       = (known after apply)
+      + certificate_authority     = (known after apply)
+      + cluster_id                = (known after apply)
+      + created_at                = (known after apply)
+      + enabled_cluster_log_types = [
+          + "api",
+          + "audit",
+          + "authenticator",
+        ]
+      + endpoint                  = (known after apply)
+      + id                        = (known after apply)
+      + identity                  = (known after apply)
+      + name                      = (known after apply)
+      + platform_version          = (known after apply)
+      + role_arn                  = (known after apply)
+      + status                    = (known after apply)
+      + tags                      = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all                  = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + version                   = "1.27"
+
+      + encryption_config {
+          + resources = [
+              + "secrets",
+            ]
+
+          + provider {
+              + key_arn = (known after apply)
+            }
+        }
+
+      + kubernetes_network_config {
+          + ip_family         = (known after apply)
+          + service_ipv4_cidr = (known after apply)
+          + service_ipv6_cidr = (known after apply)
+        }
+
+      + timeouts {}
+
+      + vpc_config {
+          + cluster_security_group_id = (known after apply)
+          + endpoint_private_access   = true
+          + endpoint_public_access    = true
+          + public_access_cidrs       = [
+              + "0.0.0.0/0",
+            ]
+          + security_group_ids        = (known after apply)
+          + subnet_ids                = (known after apply)
+          + vpc_id                    = (known after apply)
+        }
+    }
+
+  # module.eks.aws_iam_openid_connect_provider.oidc_provider[0] will be created
+  + resource "aws_iam_openid_connect_provider" "oidc_provider" {
+      + arn             = (known after apply)
+      + client_id_list  = [
+          + "sts.amazonaws.com",
+        ]
+      + id              = (known after apply)
+      + tags            = (known after apply)
+      + tags_all        = (known after apply)
+      + thumbprint_list = (known after apply)
+      + url             = (known after apply)
+    }
+
+  # module.eks.aws_iam_policy.cluster_encryption[0] will be created
+  + resource "aws_iam_policy" "cluster_encryption" {
+      + arn         = (known after apply)
+      + description = "Cluster encryption policy to allow cluster role to utilize CMK provided"
+      + id          = (known after apply)
+      + name        = (known after apply)
+      + name_prefix = (known after apply)
+      + path        = "/"
+      + policy      = (known after apply)
+      + policy_id   = (known after apply)
+      + tags        = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all    = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+    }
+
+  # module.eks.aws_iam_role.this[0] will be created
+  + resource "aws_iam_role" "this" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "eks.amazonaws.com"
+                        }
+                      + Sid       = "EKSClusterAssumeRole"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + force_detach_policies = true
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = (known after apply)
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags                  = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all              = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy {
+          + name   = (known after apply)
+          + policy = jsonencode(
+                {
+                  + Statement = [
+                      + {
+                          + Action   = [
+                              + "logs:CreateLogGroup",
+                            ]
+                          + Effect   = "Deny"
+                          + Resource = "*"
+                        },
+                    ]
+                  + Version   = "2012-10-17"
+                }
+            )
+        }
+    }
+
+  # module.eks.aws_iam_role_policy_attachment.cluster_encryption[0] will be created
+  + resource "aws_iam_role_policy_attachment" "cluster_encryption" {
+      + id         = (known after apply)
+      + policy_arn = (known after apply)
+      + role       = (known after apply)
+    }
+
+  # module.eks.aws_iam_role_policy_attachment.this["AmazonEKSClusterPolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "this" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+      + role       = (known after apply)
+    }
+
+  # module.eks.aws_iam_role_policy_attachment.this["AmazonEKSVPCResourceController"] will be created
+  + resource "aws_iam_role_policy_attachment" "this" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+      + role       = (known after apply)
+    }
+
+  # module.eks.aws_security_group.cluster[0] will be created
+  + resource "aws_security_group" "cluster" {
+      + arn                    = (known after apply)
+      + description            = "EKS cluster security group"
+      + egress                 = (known after apply)
+      + id                     = (known after apply)
+      + ingress                = (known after apply)
+      + name                   = (known after apply)
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + tags                   = (known after apply)
+      + tags_all               = (known after apply)
+      + vpc_id                 = (known after apply)
+    }
+
+  # module.eks.aws_security_group.node[0] will be created
+  + resource "aws_security_group" "node" {
+      + arn                    = (known after apply)
+      + description            = "EKS node shared security group"
+      + egress                 = (known after apply)
+      + id                     = (known after apply)
+      + ingress                = (known after apply)
+      + name                   = (known after apply)
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + tags                   = (known after apply)
+      + tags_all               = (known after apply)
+      + vpc_id                 = (known after apply)
+    }
+
+  # module.eks.aws_security_group_rule.cluster["ingress_nodes_443"] will be created
+  + resource "aws_security_group_rule" "cluster" {
+      + description              = "Node groups to cluster API"
+      + from_port                = 443
+      + id                       = (known after apply)
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = false
+      + source_security_group_id = (known after apply)
+      + to_port                  = 443
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["egress_all"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + cidr_blocks              = [
+          + "0.0.0.0/0",
+        ]
+      + description              = "Allow all egress"
+      + from_port                = 0
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "-1"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = false
+      + source_security_group_id = (known after apply)
+      + to_port                  = 0
+      + type                     = "egress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_cluster_443"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Cluster API to node groups"
+      + from_port                = 443
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = false
+      + source_security_group_id = (known after apply)
+      + to_port                  = 443
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_cluster_4443_webhook"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Cluster API to node 4443/tcp webhook"
+      + from_port                = 4443
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = false
+      + source_security_group_id = (known after apply)
+      + to_port                  = 4443
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_cluster_6443_webhook"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Cluster API to node 6443/tcp webhook"
+      + from_port                = 6443
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = false
+      + source_security_group_id = (known after apply)
+      + to_port                  = 6443
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_cluster_8443_webhook"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Cluster API to node 8443/tcp webhook"
+      + from_port                = 8443
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = false
+      + source_security_group_id = (known after apply)
+      + to_port                  = 8443
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_cluster_9443_webhook"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Cluster API to node 9443/tcp webhook"
+      + from_port                = 9443
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = false
+      + source_security_group_id = (known after apply)
+      + to_port                  = 9443
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_cluster_kubelet"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Cluster API to node kubelets"
+      + from_port                = 10250
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = false
+      + source_security_group_id = (known after apply)
+      + to_port                  = 10250
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_nodes_ephemeral"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Node to node ingress on ephemeral ports"
+      + from_port                = 1025
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = true
+      + source_security_group_id = (known after apply)
+      + to_port                  = 65535
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_self_coredns_tcp"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Node to node CoreDNS"
+      + from_port                = 53
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "tcp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = true
+      + source_security_group_id = (known after apply)
+      + to_port                  = 53
+      + type                     = "ingress"
+    }
+
+  # module.eks.aws_security_group_rule.node["ingress_self_coredns_udp"] will be created
+  + resource "aws_security_group_rule" "node" {
+      + description              = "Node to node CoreDNS UDP"
+      + from_port                = 53
+      + id                       = (known after apply)
+      + prefix_list_ids          = []
+      + protocol                 = "udp"
+      + security_group_id        = (known after apply)
+      + security_group_rule_id   = (known after apply)
+      + self                     = true
+      + source_security_group_id = (known after apply)
+      + to_port                  = 53
+      + type                     = "ingress"
+    }
+
+  # module.eks.time_sleep.this[0] will be created
+  + resource "time_sleep" "this" {
+      + create_duration = "30s"
+      + id              = (known after apply)
+      + triggers        = {
+          + "cluster_certificate_authority_data" = (known after apply)
+          + "cluster_endpoint"                   = (known after apply)
+          + "cluster_name"                       = (known after apply)
+          + "cluster_version"                    = "1.27"
+        }
+    }
+
+  # module.vpc.aws_default_network_acl.this[0] will be created
+  + resource "aws_default_network_acl" "this" {
+      + arn                    = (known after apply)
+      + default_network_acl_id = (known after apply)
+      + id                     = (known after apply)
+      + owner_id               = (known after apply)
+      + tags                   = {
+          + "Name" = "eks-vpc-default"
+        }
+      + tags_all               = {
+          + "Name" = "eks-vpc-default"
+        }
+      + vpc_id                 = (known after apply)
+
+      + egress {
+          + action          = "allow"
+          + from_port       = 0
+          + ipv6_cidr_block = "::/0"
+          + protocol        = "-1"
+          + rule_no         = 101
+          + to_port         = 0
+        }
+      + egress {
+          + action     = "allow"
+          + cidr_block = "0.0.0.0/0"
+          + from_port  = 0
+          + protocol   = "-1"
+          + rule_no    = 100
+          + to_port    = 0
+        }
+
+      + ingress {
+          + action          = "allow"
+          + from_port       = 0
+          + ipv6_cidr_block = "::/0"
+          + protocol        = "-1"
+          + rule_no         = 101
+          + to_port         = 0
+        }
+      + ingress {
+          + action     = "allow"
+          + cidr_block = "0.0.0.0/0"
+          + from_port  = 0
+          + protocol   = "-1"
+          + rule_no    = 100
+          + to_port    = 0
+        }
+    }
+
+  # module.vpc.aws_default_route_table.default[0] will be created
+  + resource "aws_default_route_table" "default" {
+      + arn                    = (known after apply)
+      + default_route_table_id = (known after apply)
+      + id                     = (known after apply)
+      + owner_id               = (known after apply)
+      + route                  = (known after apply)
+      + tags                   = {
+          + "Name" = "eks-vpc-default"
+        }
+      + tags_all               = {
+          + "Name" = "eks-vpc-default"
+        }
+      + vpc_id                 = (known after apply)
+
+      + timeouts {
+          + create = "5m"
+          + update = "5m"
+        }
+    }
+
+  # module.vpc.aws_default_security_group.this[0] will be created
+  + resource "aws_default_security_group" "this" {
+      + arn                    = (known after apply)
+      + description            = (known after apply)
+      + egress                 = (known after apply)
+      + id                     = (known after apply)
+      + ingress                = (known after apply)
+      + name                   = (known after apply)
+      + name_prefix            = (known after apply)
+      + owner_id               = (known after apply)
+      + revoke_rules_on_delete = false
+      + tags                   = {
+          + "Name" = "eks-vpc-default"
+        }
+      + tags_all               = {
+          + "Name" = "eks-vpc-default"
+        }
+      + vpc_id                 = (known after apply)
+    }
+
+  # module.vpc.aws_eip.nat[0] will be created
+  + resource "aws_eip" "nat" {
+      + allocation_id        = (known after apply)
+      + association_id       = (known after apply)
+      + carrier_ip           = (known after apply)
+      + customer_owned_ip    = (known after apply)
+      + domain               = "vpc"
+      + id                   = (known after apply)
+      + instance             = (known after apply)
+      + network_border_group = (known after apply)
+      + network_interface    = (known after apply)
+      + private_dns          = (known after apply)
+      + private_ip           = (known after apply)
+      + public_dns           = (known after apply)
+      + public_ip            = (known after apply)
+      + public_ipv4_pool     = (known after apply)
+      + tags                 = {
+          + "Name" = "eks-vpc-us-east-1a"
+        }
+      + tags_all             = {
+          + "Name" = "eks-vpc-us-east-1a"
+        }
+      + vpc                  = (known after apply)
+    }
+
+  # module.vpc.aws_internet_gateway.this[0] will be created
+  + resource "aws_internet_gateway" "this" {
+      + arn      = (known after apply)
+      + id       = (known after apply)
+      + owner_id = (known after apply)
+      + tags     = {
+          + "Name" = "eks-vpc"
+        }
+      + tags_all = {
+          + "Name" = "eks-vpc"
+        }
+      + vpc_id   = (known after apply)
+    }
+
+  # module.vpc.aws_nat_gateway.this[0] will be created
+  + resource "aws_nat_gateway" "this" {
+      + allocation_id                      = (known after apply)
+      + association_id                     = (known after apply)
+      + connectivity_type                  = "public"
+      + id                                 = (known after apply)
+      + network_interface_id               = (known after apply)
+      + private_ip                         = (known after apply)
+      + public_ip                          = (known after apply)
+      + secondary_private_ip_address_count = (known after apply)
+      + secondary_private_ip_addresses     = (known after apply)
+      + subnet_id                          = (known after apply)
+      + tags                               = {
+          + "Name" = "eks-vpc-us-east-1a"
+        }
+      + tags_all                           = {
+          + "Name" = "eks-vpc-us-east-1a"
+        }
+    }
+
+  # module.vpc.aws_route.private_nat_gateway[0] will be created
+  + resource "aws_route" "private_nat_gateway" {
+      + destination_cidr_block = "0.0.0.0/0"
+      + id                     = (known after apply)
+      + instance_id            = (known after apply)
+      + instance_owner_id      = (known after apply)
+      + nat_gateway_id         = (known after apply)
+      + network_interface_id   = (known after apply)
+      + origin                 = (known after apply)
+      + route_table_id         = (known after apply)
+      + state                  = (known after apply)
+
+      + timeouts {
+          + create = "5m"
+        }
+    }
+
+  # module.vpc.aws_route.public_internet_gateway[0] will be created
+  + resource "aws_route" "public_internet_gateway" {
+      + destination_cidr_block = "0.0.0.0/0"
+      + gateway_id             = (known after apply)
+      + id                     = (known after apply)
+      + instance_id            = (known after apply)
+      + instance_owner_id      = (known after apply)
+      + network_interface_id   = (known after apply)
+      + origin                 = (known after apply)
+      + route_table_id         = (known after apply)
+      + state                  = (known after apply)
+
+      + timeouts {
+          + create = "5m"
+        }
+    }
+
+  # module.vpc.aws_route_table.private[0] will be created
+  + resource "aws_route_table" "private" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = (known after apply)
+      + tags             = {
+          + "Name" = "eks-vpc-private"
+        }
+      + tags_all         = {
+          + "Name" = "eks-vpc-private"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table.public[0] will be created
+  + resource "aws_route_table" "public" {
+      + arn              = (known after apply)
+      + id               = (known after apply)
+      + owner_id         = (known after apply)
+      + propagating_vgws = (known after apply)
+      + route            = (known after apply)
+      + tags             = {
+          + "Name" = "eks-vpc-public"
+        }
+      + tags_all         = {
+          + "Name" = "eks-vpc-public"
+        }
+      + vpc_id           = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[0] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[1] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.private[2] will be created
+  + resource "aws_route_table_association" "private" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[0] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[1] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_route_table_association.public[2] will be created
+  + resource "aws_route_table_association" "public" {
+      + id             = (known after apply)
+      + route_table_id = (known after apply)
+      + subnet_id      = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[0] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.1.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = (known after apply)
+      + tags_all                                       = (known after apply)
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[1] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.2.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = (known after apply)
+      + tags_all                                       = (known after apply)
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.private[2] will be created
+  + resource "aws_subnet" "private" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1c"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.3.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = false
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = (known after apply)
+      + tags_all                                       = (known after apply)
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[0] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1a"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.4.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = (known after apply)
+      + tags_all                                       = (known after apply)
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[1] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1b"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.5.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = (known after apply)
+      + tags_all                                       = (known after apply)
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_subnet.public[2] will be created
+  + resource "aws_subnet" "public" {
+      + arn                                            = (known after apply)
+      + assign_ipv6_address_on_creation                = false
+      + availability_zone                              = "us-east-1c"
+      + availability_zone_id                           = (known after apply)
+      + cidr_block                                     = "10.0.6.0/24"
+      + enable_dns64                                   = false
+      + enable_resource_name_dns_a_record_on_launch    = false
+      + enable_resource_name_dns_aaaa_record_on_launch = false
+      + id                                             = (known after apply)
+      + ipv6_cidr_block_association_id                 = (known after apply)
+      + ipv6_native                                    = false
+      + map_public_ip_on_launch                        = true
+      + owner_id                                       = (known after apply)
+      + private_dns_hostname_type_on_launch            = (known after apply)
+      + tags                                           = (known after apply)
+      + tags_all                                       = (known after apply)
+      + vpc_id                                         = (known after apply)
+    }
+
+  # module.vpc.aws_vpc.this[0] will be created
+  + resource "aws_vpc" "this" {
+      + arn                                  = (known after apply)
+      + cidr_block                           = "10.0.0.0/16"
+      + default_network_acl_id               = (known after apply)
+      + default_route_table_id               = (known after apply)
+      + default_security_group_id            = (known after apply)
+      + dhcp_options_id                      = (known after apply)
+      + enable_dns_hostnames                 = true
+      + enable_dns_support                   = true
+      + enable_network_address_usage_metrics = (known after apply)
+      + id                                   = (known after apply)
+      + instance_tenancy                     = "default"
+      + ipv6_association_id                  = (known after apply)
+      + ipv6_cidr_block                      = (known after apply)
+      + ipv6_cidr_block_network_border_group = (known after apply)
+      + main_route_table_id                  = (known after apply)
+      + owner_id                             = (known after apply)
+      + tags                                 = {
+          + "Name" = "eks-vpc"
+        }
+      + tags_all                             = {
+          + "Name" = "eks-vpc"
+        }
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_eks_node_group.this[0] will be created
+  + resource "aws_eks_node_group" "this" {
+      + ami_type               = "AL2_x86_64"
+      + arn                    = (known after apply)
+      + capacity_type          = (known after apply)
+      + cluster_name           = (known after apply)
+      + disk_size              = (known after apply)
+      + id                     = (known after apply)
+      + instance_types         = [
+          + "t3.small",
+        ]
+      + node_group_name        = (known after apply)
+      + node_group_name_prefix = "node-group-1-"
+      + node_role_arn          = (known after apply)
+      + release_version        = (known after apply)
+      + resources              = (known after apply)
+      + status                 = (known after apply)
+      + subnet_ids             = (known after apply)
+      + tags                   = {
+          + "Name"        = "node-group-1"
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all               = {
+          + "Name"        = "node-group-1"
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + version                = "1.27"
+
+      + launch_template {
+          + id      = (known after apply)
+          + name    = (known after apply)
+          + version = (known after apply)
+        }
+
+      + scaling_config {
+          + desired_size = 2
+          + max_size     = 2
+          + min_size     = 2
+        }
+
+      + timeouts {}
+
+      + update_config {
+          + max_unavailable_percentage = 33
+        }
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role.this[0] will be created
+  + resource "aws_iam_role" "this" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "sts:AssumeRole"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "ec2.amazonaws.com"
+                        }
+                      + Sid       = "EKSNodeAssumeRole"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + create_date           = (known after apply)
+      + description           = "EKS managed node group "
+      + force_detach_policies = true
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "eks_node_role"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags                  = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all              = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + unique_id             = (known after apply)
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role_policy_attachment.additional["AmazonEBSCSIDriverPolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "additional" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+      + role       = "eks_node_role"
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role_policy_attachment.additional["AmazonEC2ContainerRegistryReadOnly"] will be created
+  + resource "aws_iam_role_policy_attachment" "additional" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      + role       = "eks_node_role"
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role_policy_attachment.additional["AmazonEKSWorkerNodePolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "additional" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+      + role       = "eks_node_role"
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role_policy_attachment.additional["AmazonEKS_CNI_Policy"] will be created
+  + resource "aws_iam_role_policy_attachment" "additional" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      + role       = "eks_node_role"
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role_policy_attachment.additional["AmazonSSMManagedInstanceCore"] will be created
+  + resource "aws_iam_role_policy_attachment" "additional" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      + role       = "eks_node_role"
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role_policy_attachment.this["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"] will be created
+  + resource "aws_iam_role_policy_attachment" "this" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+      + role       = "eks_node_role"
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role_policy_attachment.this["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"] will be created
+  + resource "aws_iam_role_policy_attachment" "this" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+      + role       = "eks_node_role"
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_iam_role_policy_attachment.this["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"] will be created
+  + resource "aws_iam_role_policy_attachment" "this" {
+      + id         = (known after apply)
+      + policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+      + role       = "eks_node_role"
+    }
+
+  # module.eks.module.eks_managed_node_group["node"].aws_launch_template.this[0] will be created
+  + resource "aws_launch_template" "this" {
+      + arn                    = (known after apply)
+      + default_version        = (known after apply)
+      + description            = "Custom launch template for node-group-1 EKS managed node group"
+      + id                     = (known after apply)
+      + latest_version         = (known after apply)
+      + name                   = (known after apply)
+      + name_prefix            = "node-"
+      + tags                   = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all               = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + update_default_version = true
+      + vpc_security_group_ids = (known after apply)
+
+      + metadata_options {
+          + http_endpoint               = "enabled"
+          + http_protocol_ipv6          = (known after apply)
+          + http_put_response_hop_limit = 2
+          + http_tokens                 = "required"
+          + instance_metadata_tags      = (known after apply)
+        }
+
+      + monitoring {
+          + enabled = true
+        }
+
+      + tag_specifications {
+          + resource_type = "instance"
+          + tags          = {
+              + "Name"        = "node-group-1"
+              + "environment" = "dev"
+              + "purpose"     = "challenge"
+            }
+        }
+      + tag_specifications {
+          + resource_type = "network-interface"
+          + tags          = {
+              + "Name"        = "node-group-1"
+              + "environment" = "dev"
+              + "purpose"     = "challenge"
+            }
+        }
+      + tag_specifications {
+          + resource_type = "volume"
+          + tags          = {
+              + "Name"        = "node-group-1"
+              + "environment" = "dev"
+              + "purpose"     = "challenge"
+            }
+        }
+    }
+
+  # module.eks.module.kms.data.aws_iam_policy_document.this[0] will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "this" {
+      + id                        = (known after apply)
+      + json                      = (known after apply)
+      + override_policy_documents = []
+      + source_policy_documents   = []
+
+      + statement {
+          + actions   = [
+              + "kms:CancelKeyDeletion",
+              + "kms:Create*",
+              + "kms:Delete*",
+              + "kms:Describe*",
+              + "kms:Disable*",
+              + "kms:Enable*",
+              + "kms:Get*",
+              + "kms:List*",
+              + "kms:Put*",
+              + "kms:Revoke*",
+              + "kms:ScheduleKeyDeletion",
+              + "kms:TagResource",
+              + "kms:UntagResource",
+              + "kms:Update*",
+            ]
+          + resources = [
+              + "*",
+            ]
+          + sid       = "KeyAdministration"
+
+          + principals {
+              + identifiers = [
+                  + "arn:aws:iam::651140092670:user/terraform",
+                ]
+              + type        = "AWS"
+            }
+        }
+      + statement {
+          + actions   = [
+              + "kms:Decrypt",
+              + "kms:DescribeKey",
+              + "kms:Encrypt",
+              + "kms:GenerateDataKey*",
+              + "kms:ReEncrypt*",
+            ]
+          + resources = [
+              + "*",
+            ]
+          + sid       = "KeyUsage"
+
+          + principals {
+              + identifiers = [
+                  + (known after apply),
+                ]
+              + type        = "AWS"
+            }
+        }
+    }
+
+  # module.eks.module.kms.aws_kms_alias.this["cluster"] will be created
+  + resource "aws_kms_alias" "this" {
+      + arn            = (known after apply)
+      + id             = (known after apply)
+      + name           = (known after apply)
+      + name_prefix    = (known after apply)
+      + target_key_arn = (known after apply)
+      + target_key_id  = (known after apply)
+    }
+
+  # module.eks.module.kms.aws_kms_key.this[0] will be created
+  + resource "aws_kms_key" "this" {
+      + arn                                = (known after apply)
+      + bypass_policy_lockout_safety_check = false
+      + customer_master_key_spec           = "SYMMETRIC_DEFAULT"
+      + description                        = (known after apply)
+      + enable_key_rotation                = true
+      + id                                 = (known after apply)
+      + is_enabled                         = true
+      + key_id                             = (known after apply)
+      + key_usage                          = "ENCRYPT_DECRYPT"
+      + multi_region                       = false
+      + policy                             = (known after apply)
+      + tags                               = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+      + tags_all                           = {
+          + "environment" = "dev"
+          + "purpose"     = "challenge"
+        }
+    }
+
+Plan: 78 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + athena_connection_details = (sensitive value)

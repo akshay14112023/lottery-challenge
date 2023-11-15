@@ -1,0 +1,18 @@
+---
+# The bootstrap script installs pyathena and PyAthenaJDBC, required to enable Athena as a database in Superset.
+bootstrapScript: |
+  #!/bin/bash
+  pip install pyathena[pandas] \
+    pip install PyAthenaJDBC &&\
+  if [ ! -f ~/bootstrap ]; then echo "Running Superset with uid {{ .Values.runAsUser }}" > ~/bootstrap; fi
+
+
+service:
+  type: LoadBalancer  # NOT recommended in a production environment; service should be backed by an ingress resource for external access
+  port: 80 # NOT recommended in a production environment; should use HTTPS/port 443
+  nodePort:
+    http: 30010
+
+extraEnv: 
+  TALISMAN_ENABLED: False
+  WTF_CSRF_ENABLED: False
